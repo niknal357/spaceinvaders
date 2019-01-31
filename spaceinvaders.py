@@ -24,7 +24,7 @@ prevtime = time.time() * 1000
 stars = []
 bullets = []
 particles = []
-enemysize = 33
+enemysize = 55
 swarmsize = [int(width/3/(enemysize*ENEMY_HTW_RATIO)), int(height/3/enemysize)]
 gamefont = pygame.font.Font('SPACEBOY.TTF', 30)
 changestarcolor = 100
@@ -94,7 +94,7 @@ class Enemy(object):
             self.dead = True
 
 class Particle(object):
-    def __init__(self, x, y, color, size, colorplus = (0, 0, 0), colortimes = (1, 1, 1), xvel = 0, yvel = 0, sizeinc = 0, lifespan = 1000):
+    def __init__(self, x, y, color, size, colorplus = (0, 0, 0), colortimes = (1, 1, 1), xvel = 0, yvel = 0, sizeinc = 0, lifespan = 1000, showblind = True):
         self.x = x
         self.y = y
         self.color = color
@@ -105,6 +105,7 @@ class Particle(object):
         self.size = size
         self.sizeinc = sizeinc
         self.lifespan = lifespan
+        self.showblind = showblind
     def Update(self):
         self.size += self.sizeinc
         self.x += self.xvel
@@ -124,9 +125,10 @@ class Particle(object):
                 )
         self.lifespan -= 1
     def Draw(self):
-        pygame.draw.circle(screen,
-                (int(self.color[0]), int(self.color[1]), int(self.color[2])),
-                (int(self.x), int(self.y)), int(self.size), 0)
+        if blind == 0 or self.showblind:
+            pygame.draw.circle(screen,
+                    (int(self.color[0]), int(self.color[1]), int(self.color[2])),
+                    (int(self.x), int(self.y)), int(self.size), 0)
 
 class Bullet(object):
     def __init__(self, x, y):
@@ -224,7 +226,7 @@ class Enemybullet(Bullet):
     def Cankillplayer(self):
         return True
     def Draw(self):
-        if blind>0 and (playerrect.centerx-self.x)**2+(playerrect.centery-self.y)**2 > 100000:
+        if blind>0 and math.sqrt((playerrect.centerx-self.x)**2+(playerrect.centery-self.y)**2) > 500:
             return
         Bullet.Draw(self)
 
@@ -254,7 +256,7 @@ def make_star():
     star_color = (sr, sg, sb)
     if random.random() < 0.5:
         r = random.randint(3, 8)/2
-        particles.append(Particle(x=random.randint(0, width), y=0, size=r*3, color=star_color, yvel=r+0.5, lifespan=0))
+        particles.append(Particle(x=random.randint(0, width), y=0, size=r*3, color=star_color, yvel=r+0.5, lifespan=0, showblind=False))
 #Create starting stars
 for i in xrange(0, 1000):
     for particle in particles:
@@ -270,8 +272,8 @@ enemy_sprite = pygame.transform.scale(enemy_sprite, (int(ENEMY_HTW_RATIO * enemy
 enemyrect = enemy_sprite.get_rect()
 
 # make enemies
-#cSwarm(shape = 'circ', size1 = 7)
-cSwarm(shape = 'rect', size1 = swarmsize[0], size2 = swarmsize[1])
+cSwarm(shape = 'circ', size1 = 4)
+#cSwarm(shape = 'rect', size1 = swarmsize[0], size2 = swarmsize[1])
 
 while True:
     timeleft += time.time()*1000 - prevtime
@@ -287,15 +289,15 @@ while True:
             text = 'YOU ARE THE EPIC GAMER OF THE YEAR'
         txt = gamefont.render(text, True, (255, 255, 255), None)
         textsize = gamefont.size(text)
-        while True:
-            draw()
-            screen.blit(txt, pygame.Rect((width/2-textsize[0]/2, height/2-textsize[1]/2), textsize))
-            pygame.display.flip()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
-                    pygame.display.quit()
-                    pygame.quit()
-                    sys.exit()
+        draw()
+        screen.blit(txt, pygame.Rect((width/2-textsize[0]/2, height/2-textsize[1]/2), textsize))
+        pygame.display.flip()
+        time.sleep(1.5)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                pygame.display.quit()
+                pygame.quit()
+                sys.exit()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.display.quit()
