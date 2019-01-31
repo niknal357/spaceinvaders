@@ -27,6 +27,8 @@ particles = []
 enemysize = 33
 swarmsize = [int(width/3/(enemysize*ENEMY_HTW_RATIO)), int(height/3/enemysize)]
 gamefont = pygame.font.Font('SPACEBOY.TTF', 30)
+changestarcolor = 100
+blind = 0
 
 def draw():
     healthtxt = gamefont.render(str(playerhp)+'hp', True, (255, 255, 255), None)
@@ -35,8 +37,9 @@ def draw():
         particle.Draw()
     for bullet in bullets:
         bullet.Draw()
-    for enemy in Enemy.enemies:
-        enemy.Draw()
+    if blind == 0:
+        for enemy in Enemy.enemies:
+            enemy.Draw()
     screen.blit(player, playerrect)
     screen.blit(healthtxt, pygame.Rect((0, 0), gamefont.size(str(playerhp)+'hp')))
 
@@ -220,13 +223,43 @@ class Enemybullet(Bullet):
         return False
     def Cankillplayer(self):
         return True
+    def Draw(self):
+        if blind>0 and (playerrect.centerx-self.x)**2+(playerrect.centery-self.y)**2 > 100000:
+            return
+        Bullet.Draw(self)
 
+def make_star():
+    global changestarcolor
+    global star_color
+    global want_star_color
+    changestarcolor -= 1
+    if changestarcolor == 0:
+        changestarcolor = 100
+        want_star_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    sr = star_color[0]
+    sg = star_color[1]
+    sb = star_color[2]
+    if sr < want_star_color[0]:
+        sr += 1
+    elif sr > want_star_color[0]:
+        sr -= 1
+    if sg < want_star_color[1]:
+        sg += 1
+    elif sg > want_star_color[1]:
+        sg -= 1
+    if sb < want_star_color[2]:
+        sb += 1
+    elif sb > want_star_color[2]:
+        sb -= 1
+    star_color = (sr, sg, sb)
+    if random.random() < 0.5:
+        r = random.randint(3, 8)/2
+        particles.append(Particle(x=random.randint(0, width), y=0, size=r*3, color=star_color, yvel=r+0.5, lifespan=0))
 #Create starting stars
 for i in xrange(0, 1000):
     for particle in particles:
         particle.Update()
-    if random.random() < 0.1:
-        particles.append(Particle(x=random.randint(0, width), y=0, size=3, color=star_color, yvel=random.random()+0.5, lifespan=0))
+    make_star()
 
 #load the images and create coordinates
 player = pygame.image.load("Space Invader Models/playership.png")
@@ -246,10 +279,23 @@ while True:
 
     #Input
     if len(Enemy.enemies) == 0 or playerhp <= 0:
-        time.sleep(1)
-        pygame.display.quit()
-        pygame.quit()
-        sys.exit()
+        if playerhp <= 0:
+            text = 'YOU LOSE'
+        elif len(Enemy.enemies) == 0:
+            text = 'YOU WIN'
+        elif len(Enemy.enemies) == 0 and playerhp <= 0:
+            text = 'YOU ARE THE EPIC GAMER OF THE YEAR'
+        txt = gamefont.render(text, True, (255, 255, 255), None)
+        textsize = gamefont.size(text)
+        while True:
+            draw()
+            screen.blit(txt, pygame.Rect((width/2-textsize[0]/2, height/2-textsize[1]/2), textsize))
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                    pygame.display.quit()
+                    pygame.quit()
+                    sys.exit()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.display.quit()
@@ -281,13 +327,10 @@ while True:
     #movement
     while timeleft - 5 > 0:
         timeleft -= 5
+        blind = max(0, blind-1)
         for bullet in bullets:
             bullet.Update()
-        if random.random() < 0.5:
-            star_color = (min(max(star_color[0]*random.randint(8, 12)/10, 50), 255), min(max(star_color[1]*random.randint(8, 12)/10, 50), 255), min(max(star_color[2]*random.randint(8, 12)/10, 50), 255))
-        if random.random() < 0.1:
-            r = random.random()
-            particles.append(Particle(x=random.randint(0, width), y=0, size=r*6, color=star_color, yvel=r+0.5, lifespan=0))
+        make_star() 
         for particle in particles:
             particle.Update()
         for bullet in bullets:
@@ -299,6 +342,7 @@ while True:
                 if bullet.rect.colliderect(playerrect):
                     playerhp -= bullet.damage
                     bullet.dead = True
+                    blind = 550
             if not bullet.Cankillenemy():
                 continue
             for enemy in Enemy.enemies:
