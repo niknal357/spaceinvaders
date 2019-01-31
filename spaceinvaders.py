@@ -24,7 +24,7 @@ prevtime = time.time() * 1000
 stars = []
 bullets = []
 particles = []
-enemysize = 55
+enemysize = 33
 swarmsize = [int(width/3/(enemysize*ENEMY_HTW_RATIO)), int(height/3/enemysize)]
 gamefont = pygame.font.Font('SPACEBOY.TTF', 30)
 changestarcolor = 100
@@ -46,14 +46,14 @@ def draw():
 def cSwarm(size1, size2=0, shape = 'rect'):
     Enemy.enemies = []
     if shape == 'rect':
-        for enemyx in xrange(0, size1):
-            for enemyy in xrange(0, size2):
+        for enemyx in range(0, size1):
+            for enemyy in range(0, size2):
                 Enemy.enemies.append(Enemy(pygame.Rect((int(10+(enemysize*ENEMY_HTW_RATIO)*enemyx), int(10+enemysize*enemyy)), enemyrect.size), DEHP))
     if shape == 'circ':
         enemy_per_layer_increase = 10
         Enemy.enemies.append(Enemy(pygame.Rect((width/2, height/2), enemyrect.size), DEHP))
-        for layer in xrange(1, size1+1):
-            for rot in xrange(0, layer*enemy_per_layer_increase):
+        for layer in range(1, size1+1):
+            for rot in range(0, layer*enemy_per_layer_increase):
                 Enemy.enemies.append(Enemy(pygame.Rect((math.cos(rot*(360.0/(layer*enemy_per_layer_increase))/180.0*math.pi)*layer*(enemysize*ENEMY_HTW_RATIO)+width/2, math.sin(rot*(360.0/(layer*enemy_per_layer_increase))/180.0*math.pi)*layer*enemysize+height/2), enemyrect.size), DEHP))
     ready = False
     while not ready:
@@ -258,7 +258,7 @@ def make_star():
         r = random.randint(3, 8)/2
         particles.append(Particle(x=random.randint(0, width), y=0, size=r*3, color=star_color, yvel=r+0.5, lifespan=0, showblind=False))
 #Create starting stars
-for i in xrange(0, 1000):
+for i in range(0, 1000):
     for particle in particles:
         particle.Update()
     make_star()
@@ -313,7 +313,7 @@ while True:
                     pos = [(bullet.rect.left+bullet.rect.right)/2, (bullet.rect.top+bullet.rect.bottom)/2]
                     if bullet.typ != 'rocket':
                         continue
-                    for i in xrange(0, 24):
+                    for i in range(0, 24):
                         bullet1 = Minibullet(i*15, pos[0], pos[1])
                         bullets.append(bullet1)
                     bullet.Destroy()
